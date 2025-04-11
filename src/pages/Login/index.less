@@ -1,0 +1,250 @@
+.login-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  padding: 20px;
+  
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../../assets/images/login_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+  }
+  
+  .login-box {
+    width: 420px;
+    padding: 40px;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    
+    .login-title {
+      text-align: center;
+      margin-bottom: 30px;
+      background: linear-gradient(90deg, #1890ff, #40a9ff);
+      -webkit-background-clip: text;
+      color: transparent;
+      font-weight: 600;
+      font-size: 28px;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 3px;
+        background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+        border-radius: 3px;
+      }
+    }
+    
+    .ant-tabs-nav {
+      margin-bottom: 24px;
+      
+      &::before {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .ant-tabs-tab {
+        padding: 12px 0;
+        font-size: 16px;
+        color: rgba(0, 0, 0, 0.65);
+        
+        &.ant-tabs-tab-active {
+          .ant-tabs-tab-btn {
+            color: #1890ff;
+          }
+        }
+      }
+      
+      .ant-tabs-ink-bar {
+        background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+        height: 3px;
+      }
+    }
+    
+    .ant-form-item {
+      margin-bottom: 24px;
+    }
+    
+    .ant-input-affix-wrapper {
+      padding: 8px 11px;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(24, 144, 255, 0.2);
+      transition: all 0.3s ease;
+      
+      &:hover, &:focus {
+        border-color: #40a9ff;
+        box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        background-color: rgba(255, 255, 255, 0.95);
+      }
+      
+      .ant-input {
+        background: transparent;
+      }
+    }
+    
+    .ant-btn {
+      height: 40px;
+      border-radius: 6px;
+      font-size: 16px;
+      
+      &.ant-btn-primary {
+        background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+        border: none;
+        box-shadow: 0 2px 6px rgba(24, 144, 255, 0.35);
+        
+        &:hover {
+          background: linear-gradient(90deg, #40a9ff 0%, #69c0ff 100%);
+          box-shadow: 0 4px 12px rgba(24, 144, 255, 0.45);
+          transform: translateY(-1px);
+        }
+        
+        &:active {
+          background: linear-gradient(90deg, #096dd9 0%, #1890ff 100%);
+          box-shadow: 0 2px 4px rgba(24, 144, 255, 0.25);
+          transform: translateY(0);
+        }
+      }
+    }
+    
+    .image-verify {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid rgba(24, 144, 255, 0.2);
+      
+      &-code {
+        background: linear-gradient(135deg, #f0f2f5 0%, #e6e9ec 100%);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      
+      &-input {
+        .ant-input {
+          background-color: rgba(255, 255, 255, 0.9);
+          border: 1px solid rgba(24, 144, 255, 0.2);
+          
+          &:hover, &:focus {
+            border-color: #40a9ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.95);
+          }
+        }
+      }
+    }
+  }
+
+  .third-party-login {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+
+    .third-party-btn {
+      width: 120px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      &.wechat {
+        color: #07C160;
+        border-color: #07C160;
+        
+        &:hover {
+          color: #fff;
+          background-color: #07C160;
+        }
+      }
+      
+      &.qq {
+        color: #12B7F5;
+        border-color: #12B7F5;
+        
+        &:hover {
+          color: #fff;
+          background-color: #12B7F5;
+        }
+      }
+      
+      &.weibo {
+        color: #E6162D;
+        border-color: #E6162D;
+        
+        &:hover {
+          color: #fff;
+          background-color: #E6162D;
+        }
+      }
+    }
+  }
+}
+
+.face-recognition-modal {
+  .ant-modal-content {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.25);
+  }
+  
+  .video-container {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    
+    .face-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+  
+  .face-recognition-tips {
+    text-align: center;
+    color: rgba(0, 0, 0, 0.65);
+    background-color: rgba(245, 245, 245, 0.9);
+    padding: 12px;
+    border-radius: 6px;
+    
+    p {
+      margin-bottom: 8px;
+      font-size: 14px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+} 
