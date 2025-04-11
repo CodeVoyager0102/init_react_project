@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Form, Input, Button, message, Tabs, Modal, Divider } from 'antd';
 import { UserOutlined, LockOutlined, WechatOutlined, QqOutlined, WeiboOutlined } from '@ant-design/icons';
 import ImageVerify from '../../components/ImageVerify';
-import { handleThirdPartyLogin } from '../../utils/oauth';
 import './index.less';
 
 const { TabPane } = Tabs;
@@ -148,6 +147,16 @@ const Login = () => {
     setIsLoading(false);
   };
   
+  const captureImage = () => {
+    const canvas = document.createElement('canvas');
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/png');
+  };
+  
   // 处理表单提交
   const handleSubmit = async (values) => {
     // 检查验证状态
@@ -171,28 +180,6 @@ const Login = () => {
     } catch (error) {
       console.error('登录失败:', error);
       message.error('登录失败，请重试');
-    }
-  };
-  
-  // 处理第三方登录
-  const handleThirdPartyLogin = (platform) => {
-    // 这里应该调用实际的第三方登录API
-    console.log(`使用${platform}登录`);
-    message.info(`正在跳转到${platform}登录页面...`);
-    
-    // 根据不同平台调用不同的登录方法
-    switch (platform) {
-      case 'wechat':
-        // 调用微信登录
-        break;
-      case 'qq':
-        // 调用QQ登录
-        break;
-      case 'weibo':
-        // 调用微博登录
-        break;
-      default:
-        break;
     }
   };
   
@@ -236,31 +223,6 @@ const Login = () => {
                 </Button>
               </Form.Item>
             </Form>
-            
-            <Divider>其他登录方式</Divider>
-            <div className="third-party-login">
-              <Button 
-                icon={<WechatOutlined />} 
-                onClick={() => handleThirdPartyLogin('wechat')}
-                className="third-party-btn wechat"
-              >
-                微信登录
-              </Button>
-              <Button 
-                icon={<QqOutlined />} 
-                onClick={() => handleThirdPartyLogin('qq')}
-                className="third-party-btn qq"
-              >
-                QQ登录
-              </Button>
-              <Button 
-                icon={<WeiboOutlined />} 
-                onClick={() => handleThirdPartyLogin('weibo')}
-                className="third-party-btn weibo"
-              >
-                微博登录
-              </Button>
-            </div>
           </TabPane>
           
           <TabPane tab="人脸识别登录" key="2">
@@ -297,7 +259,6 @@ const Login = () => {
         </Tabs>
       </div>
       
-      {/* 人脸识别模态框 */}
       <Modal
         title="人脸识别"
         open={isModalVisible}
