@@ -1,182 +1,227 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Form, Input, Button, message, Tabs, Modal, Divider } from 'antd';
-import { UserOutlined, LockOutlined, WechatOutlined, QqOutlined, WeiboOutlined } from '@ant-design/icons';
+import React, { useRef, useState } from 'react';
+import { Form, Input, Button, message, Tabs, Modal, Radio } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import ImageVerify from '../../components/ImageVerify';
 import './index.less';
 
 const { TabPane } = Tabs;
 
+const CameraComponent = ({ onClose }) => {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [imageSrc, setImageSrc] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+
+  // 初始化摄像头
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: 640,
+          height: 480
+        } 
+      });
+      videoRef.current.srcObject = stream;
+      setIsCameraReady(true);
+      message.success('摄像头已启动');
+    } catch (err) {
+      console.error('摄像头访问失败:', err);
+      message.error('摄像头访问失败');
+      setIsCameraReady(false);
+    }
+  };
+
+  // 拍照
+  const capturePhoto = () => {
+    console.log('开始拍照...');
+    if (!videoRef.current || !canvasRef.current) {
+      console.error('视频或画布未就绪');
+      message.error('视频未就绪');
+      return;
+    }
+
+    try {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      // 设置画布尺寸与视频一致
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg');
+      setImageSrc(dataUrl);
+      message.success('照片已捕获');
+    } catch (error) {
+      console.error('拍照失败:', error);
+      message.error('拍照失败');
+    }
+  };
+
+  // 上传图片并获取URL
+  const uploadPhoto = async () => {
+    if (!imageSrc) {
+      message.error('请先拍照');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 将Base64转为Blob
+      const blob = await fetch(imageSrc).then(res => res.blob());
+      const formData = new FormData();
+      formData.append('file', blob, 'face.jpg');
+
+      // 上传到图片存储接口
+      const uploadRes = await axios.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (!uploadRes.data.success) {
+        throw new Error(uploadRes.data.message || '上传失败');
+      }
+      
+      // 将返回的URL提交到后端
+      const faceUrl = uploadRes.data.url;
+      const faceRes = await axios.post('/api/user/face', { faceUrl });
+      
+      if (!faceRes.data.success) {
+        throw new Error(faceRes.data.message || '人脸识别失败');
+      }
+      
+      message.success('人脸识别成功！');
+      console.log('用户信息:', faceRes.data.user);
+      onClose(); // 关闭模态框
+    } catch (err) {
+      console.error('上传失败:', err);
+      message.error(err.message || '上传失败，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 组件卸载时停止摄像头
+  React.useEffect(() => {
+    return () => {
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  return (
+    <div className="camera-container">
+      <div className="video-container" style={{ marginBottom: '20px' }}>
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          playsInline 
+          style={{ 
+            width: '100%',
+            borderRadius: '8px'
+          }} 
+        />
+        <canvas
+          ref={canvasRef}
+          style={{ display: 'none' }}
+          width="640"
+          height="480"
+        />
+      </div>
+
+      <div style={{ 
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '10px',
+        marginBottom: '20px'
+      }}>
+        <Button type="primary" onClick={startCamera}>
+          启动摄像头
+        </Button>
+        <Button 
+          type="primary" 
+          onClick={capturePhoto} 
+          disabled={!isCameraReady}
+        >
+          拍照
+        </Button>
+      </div>
+      
+      {imageSrc && (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ marginBottom: '10px' }}>
+            <img 
+              src={imageSrc} 
+              alt="预览" 
+              style={{ 
+                width: '200px',
+                borderRadius: '4px',
+                border: '1px solid #ddd'
+              }} 
+            />
+          </div>
+          <Button 
+            type="primary" 
+            onClick={uploadPhoto} 
+            loading={loading}
+          >
+            {loading ? '上传中...' : '提交照片'}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Login = () => {
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState('1');
   const [imageVerified, setImageVerified] = useState(false);
-  const [faceVerified, setFaceVerified] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFaceApiLoaded, setIsFaceApiLoaded] = useState(false);
+  const [userType, setUserType] = useState('user');
+  const navigate = useNavigate();
   
-  const videoRef = useRef();
-  const canvasRef = useRef();
-  const streamRef = useRef();
-  
-  // 动态加载face-api.js
-  useEffect(() => {
-    const loadFaceApi = async () => {
-      try {
-        // 动态导入face-api.js
-        const faceapi = await import('face-api.js');
-        
-        // 加载模型
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('/models'),
-          faceapi.nets.faceRecognitionNet.loadFromUri('/models'),
-        ]);
-        
-        console.log('人脸识别模型加载成功');
-        setIsFaceApiLoaded(true);
-      } catch (error) {
-        console.error('加载人脸识别模型失败:', error);
-        message.error('加载人脸识别模型失败，请刷新页面重试');
-      }
-    };
-    
-    loadFaceApi();
-    
-    return () => {
-      // 清理资源
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
-  
-  // 处理验证码验证成功
   const handleImageSuccess = () => {
     setImageVerified(true);
     message.success('验证码正确');
   };
   
-  // 处理验证码验证失败
   const handleImageFail = () => {
     setImageVerified(false);
     message.error('验证码错误，请重试');
   };
   
-  // 开始人脸识别
-  const startFaceRecognition = async () => {
-    if (!isFaceApiLoaded) {
-      message.warning('人脸识别模型正在加载中，请稍后再试');
-      return;
-    }
-    
-    try {
-      setIsModalVisible(true);
-      setIsLoading(true);
-      
-      // 获取摄像头权限
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
-      videoRef.current.srcObject = stream;
-      
-      // 等待视频加载
-      await new Promise((resolve) => {
-        videoRef.current.onloadedmetadata = () => {
-          resolve();
-        };
-      });
-      
-      // 开始播放视频
-      videoRef.current.play();
-      
-      // 动态导入face-api.js
-      const faceapi = await import('face-api.js');
-      
-      // 开始人脸检测
-      const interval = setInterval(async () => {
-        if (videoRef.current && canvasRef.current) {
-          const detections = await faceapi.detectAllFaces(
-            videoRef.current,
-            new faceapi.TinyFaceDetectorOptions()
-          );
-          
-          // 绘制检测结果
-          const displaySize = { width: videoRef.current.width, height: videoRef.current.height };
-          faceapi.matchDimensions(canvasRef.current, displaySize);
-          const resizedDetections = faceapi.resizeResults(detections, displaySize);
-          faceapi.draw.drawDetections(canvasRef.current, resizedDetections);
-          
-          // 如果检测到人脸，则验证成功
-          if (detections.length > 0) {
-            clearInterval(interval);
-            setFaceVerified(true);
-            message.success('人脸识别成功');
-            stopFaceRecognition();
-          }
-        }
-      }, 100);
-      
-      // 保存interval ID以便清理
-      streamRef.current.intervalId = interval;
-      
-    } catch (error) {
-      console.error('启动摄像头失败:', error);
-      message.error('启动摄像头失败，请检查权限设置');
-      setIsLoading(false);
-    }
-  };
-  
-  // 停止人脸识别
-  const stopFaceRecognition = () => {
-    if (streamRef.current) {
-      // 清除interval
-      if (streamRef.current.intervalId) {
-        clearInterval(streamRef.current.intervalId);
-      }
-      
-      // 停止所有视频轨道
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    
-    setIsModalVisible(false);
-    setIsLoading(false);
-  };
-  
-  const captureImage = () => {
-    const canvas = document.createElement('canvas');
-    const video = videoRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/png');
-  };
-  
-  // 处理表单提交
   const handleSubmit = async (values) => {
-    // 检查验证状态
     if (activeTab === '1' && !imageVerified) {
       message.error('请输入正确的验证码');
       return;
     }
-    
-    if (activeTab === '2' && !faceVerified) {
-      message.error('请完成人脸识别');
-      return;
-    }
-    
     try {
-      // 这里应该调用实际的登录API
       console.log('登录信息:', values);
+      
+      // 模拟登录成功
+      const mockUser = {
+        username: values.username || '用户',
+        id: 1,
+        role: userType
+      };
+      
+      // 检查管理员登录
+      if (userType === 'admin' && values.username !== 'admin') {
+        message.error('管理员账号错误');
+        return;
+      }
+      
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      localStorage.setItem('token', 'mock-token');
       message.success('登录成功');
       
-      // 登录成功后的处理，例如跳转到首页
-      // history.push('/dashboard');
+      // 根据用户类型跳转到不同页面
+      navigate(userType === 'admin' ? '/admin' : '/user');
     } catch (error) {
       console.error('登录失败:', error);
       message.error('登录失败，请重试');
@@ -187,6 +232,17 @@ const Login = () => {
     <div className="login-container">
       <div className="login-box">
         <h2 className="login-title">用户登录</h2>
+        
+        <Form.Item>
+          <Radio.Group 
+            value={userType} 
+            onChange={e => setUserType(e.target.value)}
+            style={{ marginBottom: 16 }}
+          >
+            <Radio.Button value="user">普通用户</Radio.Button>
+            <Radio.Button value="admin">管理员</Radio.Button>
+          </Radio.Group>
+        </Form.Item>
         
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           <TabPane tab="账号密码登录" key="1">
@@ -233,26 +289,15 @@ const Login = () => {
               autoComplete="off"
             >
               <Form.Item>
-                <div className="face-recognition-container">
-                  <div className="face-recognition-title">人脸识别</div>
-                  <div className="face-recognition-wrapper">
-                    <Button 
-                      type="primary" 
-                      onClick={startFaceRecognition}
-                      loading={isLoading}
-                      disabled={!isFaceApiLoaded}
-                      block
-                    >
-                      {isFaceApiLoaded ? '开始人脸识别' : '模型加载中...'}
-                    </Button>
-                  </div>
+                <div className="face-login-container">
+                  <Button 
+                    type="primary" 
+                    onClick={() => setIsModalVisible(true)}
+                    block
+                  >
+                    开始人脸识别
+                  </Button>
                 </div>
-              </Form.Item>
-              
-              <Form.Item>
-                <Button type="primary" htmlType="submit" block>
-                  登录
-                </Button>
               </Form.Item>
             </Form>
           </TabPane>
@@ -262,26 +307,11 @@ const Login = () => {
       <Modal
         title="人脸识别"
         open={isModalVisible}
-        onCancel={stopFaceRecognition}
+        onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={500}
+        width={700}
       >
-        <div className="face-recognition-modal">
-          <div className="video-container">
-            <video
-              ref={videoRef}
-              width="400"
-              height="300"
-              autoPlay
-              muted
-            />
-            <canvas ref={canvasRef} className="face-canvas" />
-          </div>
-          <div className="face-recognition-tips">
-            <p>请将脸部对准摄像头，保持光线充足</p>
-            <p>系统将自动识别您的面部特征</p>
-          </div>
-        </div>
+        <CameraComponent onClose={() => setIsModalVisible(false)} />
       </Modal>
     </div>
   );
