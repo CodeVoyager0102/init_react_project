@@ -1,0 +1,132 @@
+.user-layout .user-sider {
+  /* Styles for the sidebar */
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15); /* Add shadow to sider */
+  overflow: auto; /* Allow scrolling if menu is long */
+  height: 100vh;
+  position: fixed; /* Keep sider fixed */
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.user-layout .logo {
+  height: 32px;
+  margin: 16px;
+  /* background: rgba(255, 255, 255, 0.3); */ /* Optional logo background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-layout .logo h1 {
+  color: #fff;
+  font-size: 18px;
+  margin: 0;
+}
+
+.user-layout .site-layout {
+  margin-left: 200px; /* Default sider width */
+  transition: margin-left 0.2s;
+  background-color: #f0f2f5; /* Set background for the content area layout */
+  min-height: 100vh; /* Ensure layout takes full height */
+}
+
+.user-layout .ant-layout-sider-collapsed + .site-layout {
+  margin-left: 80px; /* Collapsed sider width */
+}
+
+.site-layout-header {
+  background: #fff !important; /* Important to override default theme */
+  padding: 0 24px !important; /* Adjust padding */
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08); /* Add subtle shadow */
+  position: sticky; /* Make header sticky */
+  top: 0;
+  z-index: 10; /* Ensure header is above content */
+}
+
+.site-layout-content {
+  margin: 24px 16px;
+  /* padding: 24px; */ /* Padding is now on the Card inside */
+  min-height: 280px; /* Ensure content area has minimum height */
+}
+
+/* Style for the Card inside the Content */
+.content-card {
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+/* Remove or comment out old styles if they conflict */
+/*
+.user-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 40px auto;
+  background-color: #f0f2f5;
+}
+
+.user-descriptions {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+  margin-bottom: 24px;
+}
+
+.user-descriptions .ant-descriptions-item-label {
+  font-weight: bold;
+}
+
+.navigation-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
+}
+
+.nav-button {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+}
+*/
+
+/* Responsive adjustments for Layout */
+/* Add more specific responsive styles if needed */
+
+@media (max-width: 992px) {
+  .user-layout .site-layout {
+    margin-left: 80px; /* Adjust for smaller screens if sider is always collapsed */
+  }
+  .user-layout .ant-layout-sider-collapsed + .site-layout {
+     margin-left: 80px; /* Already set for collapsed */
+  }
+  .site-layout-header {
+     padding: 0 16px !important;
+  }
+  .site-layout-content {
+     margin: 16px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-container {
+    padding: 16px;
+    margin: 20px auto;
+  }
+  .nav-button {
+    height: 50px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 576px) {
+  .nav-button {
+    height: 45px;
+    font-size: 13px;
+  }
+} 

@@ -4,6 +4,7 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import ImageVerify from '../../components/ImageVerify';
+import { login, faceLogin, uploadImage } from '../../mock';
 import './index.less';
 
 const { TabPane } = Tabs;
@@ -54,6 +55,8 @@ const CameraComponent = ({ onClose }) => {
       
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL('image/jpeg');
+      // console.log('dataUrl',dataUrl);
+      
       setImageSrc(dataUrl);
       message.success('照片已捕获');
     } catch (error) {
@@ -76,26 +79,27 @@ const CameraComponent = ({ onClose }) => {
       const formData = new FormData();
       formData.append('file', blob, 'face.jpg');
 
-      // 上传到图片存储接口
-      const uploadRes = await axios.post('/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      // 上传图片
+      const uploadRes = await uploadImage(formData);
       
-      if (!uploadRes.data.success) {
-        throw new Error(uploadRes.data.message || '上传失败');
+      if (!uploadRes.success) {
+        throw new Error(uploadRes.message || '上传失败');
       }
       
-      // 将返回的URL提交到后端
-      const faceUrl = uploadRes.data.url;
-      const faceRes = await axios.post('/api/user/face', { faceUrl });
+      // 进行人脸识别登录
+      const faceRes = await faceLogin(uploadRes.data.url);
       
-      if (!faceRes.data.success) {
-        throw new Error(faceRes.data.message || '人脸识别失败');
+      if (!faceRes.success) {
+        throw new Error(faceRes.message || '人脸识别失败');
       }
+      
+      const { token, userInfo } = faceRes.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
       
       message.success('人脸识别成功！');
-      console.log('用户信息:', faceRes.data.user);
-      onClose(); // 关闭模态框
+      setIsModalVisible(false);
+      navigate('/user');
     } catch (err) {
       console.error('上传失败:', err);
       message.error(err.message || '上传失败，请重试');
@@ -203,25 +207,92 @@ const Login = () => {
     try {
       console.log('登录信息:', values);
       
-      // 模拟登录成功
-      const mockUser = {
-        username: values.username || '用户',
-        id: 1,
-        role: userType
-      };
-      
-      // 检查管理员登录
-      if (userType === 'admin' && values.username !== 'admin') {
-        message.error('管理员账号错误');
-        return;
+      let response;
+      if (activeTab === '1') {
+        // 账号密码登录
+        response = await login(values.username, values.password);
+      } else {
+        // 人脸识别登录
+        response = await faceLogin(values.faceImage);
       }
       
-      localStorage.setItem('user', JSON.stringify(mockUser));
-      localStorage.setItem('token', 'mock-token');
-      message.success('登录成功');
-      
-      // 根据用户类型跳转到不同页面
-      navigate(userType === 'admin' ? '/admin' : '/user');
+      if (response.success) {
+        const { token, userInfo } = response.data;
+        
+        // 根据用户类型设置不同的权限
+        let level, permissions, availableFeatures;
+        
+        if (userType === 'admin') {
+          level = 'LEVEL_5';
+          permissions = [
+            'QUICK_TRANSFER',
+            'BILL_PAYMENT',
+            'INVESTMENT',
+            'WEALTH_MANAGEMENT',
+            'PRIVATE_BANKING'
+          ];
+          availableFeatures = [
+            'QUICK_TRANSFER',
+            'BILL_PAYMENT',
+            'INVESTMENT',
+            'WEALTH_MANAGEMENT',
+            'PRIVATE_BANKING'
+          ];
+        } else {
+          // 根据用户名的最后一个数字决定等级（演示用）
+          const userNumber = parseInt(values.username?.slice(-1)) || 1;
+          level = `LEVEL_${Math.min(userNumber, 5)}`;
+          
+          // 根据等级设置权限
+          switch(level) {
+            case 'LEVEL_1':
+              permissions = ['QUICK_TRANSFER'];
+              availableFeatures = ['QUICK_TRANSFER'];
+              break;
+            case 'LEVEL_2':
+              permissions = ['QUICK_TRANSFER', 'BILL_PAYMENT'];
+              availableFeatures = ['QUICK_TRANSFER', 'BILL_PAYMENT'];
+              break;
+            case 'LEVEL_3':
+              permissions = ['QUICK_TRANSFER', 'BILL_PAYMENT', 'INVESTMENT'];
+              availableFeatures = ['QUICK_TRANSFER', 'BILL_PAYMENT', 'INVESTMENT'];
+              break;
+            case 'LEVEL_4':
+              permissions = ['QUICK_TRANSFER', 'BILL_PAYMENT', 'INVESTMENT', 'WEALTH_MANAGEMENT'];
+              availableFeatures = ['QUICK_TRANSFER', 'BILL_PAYMENT', 'INVESTMENT', 'WEALTH_MANAGEMENT'];
+              break;
+            case 'LEVEL_5':
+              permissions = ['QUICK_TRANSFER', 'BILL_PAYMENT', 'INVESTMENT', 'WEALTH_MANAGEMENT', 'PRIVATE_BANKING'];
+              availableFeatures = ['QUICK_TRANSFER', 'BILL_PAYMENT', 'INVESTMENT', 'WEALTH_MANAGEMENT', 'PRIVATE_BANKING'];
+              break;
+            default:
+              permissions = ['QUICK_TRANSFER'];
+              availableFeatures = ['QUICK_TRANSFER'];
+          }
+        }
+        
+        // 设置用户信息
+        const updatedUserInfo = {
+          ...userInfo,
+          level,
+          permissions,
+          availableFeatures,
+          name: userInfo.name || values.username || '用户' + Math.floor(Math.random() * 1000),
+          accountNumber: userInfo.accountNumber || '6225' + Math.floor(Math.random() * 1000000000000),
+          balance: userInfo.balance || (Math.random() * 100000).toFixed(2)
+        };
+        
+        console.log('保存的用户信息:', updatedUserInfo);
+        
+        localStorage.setItem('token', token);
+        localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
+        message.success('登录成功');
+        
+        // 根据用户类型跳转到不同页面
+        navigate(userType === 'admin' ? '/admin' : '/user');
+      } else {
+        message.error(response.message || '登录失败');
+      }
     } catch (error) {
       console.error('登录失败:', error);
       message.error('登录失败，请重试');

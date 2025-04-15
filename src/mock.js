@@ -340,10 +340,7 @@ export const transfer = (token, fromAccount, toAccount, amount, remark) => {
   sendNotification(
     toUser.id,
     'transfer',
-    `您收到一笔转账：
-    转账人：${fromUser.name}
-    金额：${amountNum}元
-    备注：${remark || '无'}`.replace(/^\s+/gm, '')
+    `您收到一笔转账：\n    转账人：${fromUser.name}\n    金额：${amountNum}元\n    备注：${remark || '无'}`.replace(/^\s+/gm, '')
   );
   
   return mockResponse({

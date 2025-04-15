@@ -1,0 +1,41 @@
+.user-container {
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+.user-info-card {
+  height: 100%;
+}
+
+.user-info {
+  font-size: 16px;
+}
+
+.user-info p {
+  margin: 16px 0;
+  display: flex;
+  align-items: center;
+}
+
+.user-info .anticon {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.transfer-card {
+  height: 100%;
+}
+
+.ant-form-item {
+  margin-bottom: 24px;
+}
+
+.ant-input-affix-wrapper {
+  width: 100%;
+}
+
+.ant-btn {
+  height: 40px;
+  font-size: 16px;
+} 
