@@ -9,7 +9,7 @@ import './index.less';
 
 const { TabPane } = Tabs;
 
-const CameraComponent = ({ onClose }) => {
+const CameraComponent = ({ onClose, navigate }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [imageSrc, setImageSrc] = useState('');
@@ -56,8 +56,10 @@ const CameraComponent = ({ onClose }) => {
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL('image/jpeg');
       // console.log('dataUrl',dataUrl);
-      
+    
+      // 将捕获的图像数据显示在预览中
       setImageSrc(dataUrl);
+
       message.success('照片已捕获');
     } catch (error) {
       console.error('拍照失败:', error);
@@ -98,7 +100,7 @@ const CameraComponent = ({ onClose }) => {
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
       
       message.success('人脸识别成功！');
-      setIsModalVisible(false);
+      onClose();
       navigate('/user');
     } catch (err) {
       console.error('上传失败:', err);
@@ -382,7 +384,7 @@ const Login = () => {
         footer={null}
         width={700}
       >
-        <CameraComponent onClose={() => setIsModalVisible(false)} />
+        <CameraComponent onClose={() => setIsModalVisible(false)} navigate={navigate} />
       </Modal>
     </div>
   );
