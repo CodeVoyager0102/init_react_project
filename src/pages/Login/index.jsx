@@ -89,7 +89,7 @@ const CameraComponent = ({ onClose, navigate }) => {
       }
       
       // 进行人脸识别登录
-      const faceRes = await faceLogin(uploadRes.data.url);
+      const faceRes = await faceLogin(uploadRes.data.url, userInfo.id);
       
       if (!faceRes.success) {
         throw new Error(faceRes.message || '人脸识别失败');
@@ -188,7 +188,7 @@ const Login = () => {
   const [activeTab, setActiveTab] = useState('1');
   const [imageVerified, setImageVerified] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [userType, setUserType] = useState('user');
+  const [userType, setUserType] = useState('');
   const navigate = useNavigate();
   
   const handleImageSuccess = () => {
@@ -289,6 +289,7 @@ const Login = () => {
         localStorage.setItem('token', token);
         localStorage.setItem('userInfo', JSON.stringify(updatedUserInfo));
         message.success('登录成功');
+        console.log('userType',userType);
         
         // 根据用户类型跳转到不同页面
         navigate(userType === 'admin' ? '/admin' : '/user');

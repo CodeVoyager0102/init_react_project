@@ -44,12 +44,12 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       'process.env': {
-        REACT_APP_WECHAT_APP_ID: JSON.stringify(process.env.REACT_APP_WECHAT_APP_ID),
-        REACT_APP_WECHAT_APP_SECRET: JSON.stringify(process.env.REACT_APP_WECHAT_APP_SECRET),
-        REACT_APP_QQ_APP_ID: JSON.stringify(process.env.REACT_APP_QQ_APP_ID),
-        REACT_APP_QQ_APP_SECRET: JSON.stringify(process.env.REACT_APP_QQ_APP_SECRET),
-        REACT_APP_WEIBO_APP_ID: JSON.stringify(process.env.REACT_APP_WEIBO_APP_ID),
-        REACT_APP_WEIBO_APP_SECRET: JSON.stringify(process.env.REACT_APP_WEIBO_APP_SECRET),
+        // REACT_APP_WECHAT_APP_ID: JSON.stringify(process.env.REACT_APP_WECHAT_APP_ID),
+        // REACT_APP_WECHAT_APP_SECRET: JSON.stringify(process.env.REACT_APP_WECHAT_APP_SECRET),
+        // REACT_APP_QQ_APP_ID: JSON.stringify(process.env.REACT_APP_QQ_APP_ID),
+        // REACT_APP_QQ_APP_SECRET: JSON.stringify(process.env.REACT_APP_QQ_APP_SECRET),
+        // REACT_APP_WEIBO_APP_ID: JSON.stringify(process.env.REACT_APP_WEIBO_APP_ID),
+        // REACT_APP_WEIBO_APP_SECRET: JSON.stringify(process.env.REACT_APP_WEIBO_APP_SECRET),
       },
     }),
   ],

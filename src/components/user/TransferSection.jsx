@@ -128,6 +128,7 @@ function TransferSection({
                     dataSource={transferRecords}
                     renderItem={item => (
                       <List.Item>
+                        { console.log('item',item)}
                         <List.Item.Meta
                           title={
                             <span>
